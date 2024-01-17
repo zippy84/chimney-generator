@@ -1,0 +1,6 @@
+name: env
+channels:
+  - defaults
+dependencies:
+  - conda-forge::vtkbool
+prefix: /home/zippy/miniconda3/envs/env

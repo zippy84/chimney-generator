@@ -1,0 +1,4 @@
+conda env create -f environment.yml
+conda activate env
+conda deactivate
+# conda remove --name env --all
