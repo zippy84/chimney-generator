@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2024, Ronald Römer
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import math
+import os
 from functools import reduce
 
 from vtkmodules.vtkCommonCore import vtkIdList, vtkPoints
@@ -199,5 +204,7 @@ if __name__ == '__main__':
         ], 'div_a': 3, 'div_b': 1, 'count': 15, 's': 7.583333, 't': 1.75, 'phi': math.pi/4 }
     ]
 
+    os.makedirs('out', exist_ok=True)
+
     for i, cfg in enumerate(cfgs):
-        Chimney(cfg).export(f'bricks{i}.stl')
+        Chimney(cfg).export(f'out/chimney{i}.stl')
