@@ -13,16 +13,18 @@ from vtkmodules.vtkCommonDataModel import vtkPolyData, VTK_POLYGON
 from vtkmodules.vtkIOLegacy import vtkPolyDataWriter
 from vtkmodules.vtkIOGeometry import vtkSTLWriter
 
-from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkCleanPolyData
+from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkCleanPolyData, vtkTriangleFilter
 from vtkmodules.vtkFiltersModeling import vtkLinearExtrusionFilter
 
 from vtkbool.vtkBool import vtkPolyDataBooleanFilter
 
 class Chimney:
     def __init__(self, cfg):
-        self.cfg = { 'e': .15, 'f': .625, 'h': .75 }
+        self.cfg = { 'e': .15, 'f': .625, 'h': .75, 'l': 1 }
 
         self.cfg.update(cfg)
+
+        assert all( c in [2, 3, 4] for c in sum(map(list, sum(cfg['seqs'], [])), []) )
 
         self.counts_a = [ sum(s_a) for s_a, _ in cfg['seqs'] ]
         self.counts_b = [ sum(s_b) for _, s_b in cfg['seqs'] ]
@@ -146,10 +148,7 @@ class Chimney:
 
         bf = reduce(lambda a, b: Chimney.union(a, b), bfs)
 
-        clean = vtkCleanPolyData()
-        clean.SetInputConnection(bf.GetOutputPort())
-
-        chimney = Chimney.union(clean, Chimney.extrude_from_line(Chimney.append_z([(0, 0), (self.cfg['a'], 0), (self.cfg['a'], self.cfg['b']), (0, self.cfg['b'])], 0), z=self.cfg['h']))
+        chimney = Chimney.union(bf, Chimney.extrude_from_line(Chimney.append_z([(0, 0), (self.cfg['a'], 0), (self.cfg['a'], self.cfg['b']), (0, self.cfg['b'])], 0), z=self.cfg['h']))
 
         st_a = (self.cfg['a']+self.cfg['e'])/self.counts_a[0]-self.cfg['e']/2
         st_b = (self.cfg['b']+self.cfg['e'])/self.counts_b[0]-self.cfg['e']/2
@@ -177,8 +176,28 @@ class Chimney:
 
         result = Chimney.difference(chimney_, Chimney.extrude_from_line(line, y=self.cfg['b']+2*off))
 
+        base_line = [(self.cfg['s'], 0, -self.cfg['t']),
+            (0, 0, -self.cfg['t']-math.tan(self.cfg['phi'])*self.cfg['s']),
+            (0, 0, -self.cfg['t']-self.cfg['l']-math.tan(self.cfg['phi'])*self.cfg['s']),
+            (self.cfg['s'], 0, -self.cfg['t']-self.cfg['l']),
+            (self.cfg['a'], 0, -self.cfg['t']-self.cfg['l']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s'])),
+            (self.cfg['a'], 0, -self.cfg['t']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s']))]
+
+        if self.cfg['s'] == 0 or self.cfg['s'] == self.cfg['a']:
+            del base_line[0]
+
+        base = Chimney.extrude_from_line(base_line, y=self.cfg['b'])
+
+        result_ = Chimney.union(result, base)
+
+        clean = vtkCleanPolyData()
+        clean.SetInputConnection(result_.GetOutputPort())
+
+        tf = vtkTriangleFilter()
+        tf.SetInputConnection(clean.GetOutputPort())
+
         writer = vtkSTLWriter()
-        writer.SetInputConnection(result.GetOutputPort())
+        writer.SetInputConnection(tf.GetOutputPort())
         writer.SetFileName(name)
         writer.Update()
 
