@@ -10,11 +10,12 @@ from functools import reduce
 
 from vtkmodules.vtkCommonCore import vtkIdList, vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPolyData, VTK_POLYGON
-from vtkmodules.vtkIOLegacy import vtkPolyDataWriter
 from vtkmodules.vtkIOGeometry import vtkSTLWriter
 
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkCleanPolyData, vtkTriangleFilter
 from vtkmodules.vtkFiltersModeling import vtkLinearExtrusionFilter
+
+# only works with vtkbool#3d0d954
 
 from vtkbool.vtkBool import vtkPolyDataBooleanFilter
 
