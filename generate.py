@@ -21,19 +21,21 @@ from vtkbool.vtkBool import vtkPolyDataBooleanFilter
 
 class Chimney:
     def __init__(self, cfg):
-        self.cfg = { 'e': .15, 'f': .625, 'h': .75, 'l': 1 }
+        self.cfg = { 'e': .15, 'f': .625, 'h': .75, 'l': 1, 'div_a': 1, 'div_b': 1, 'phi': 0, 's': 0 }
 
         self.cfg.update(cfg)
 
-        assert all( c in [2, 3, 4] for c in sum(map(list, sum(cfg['seqs'], [])), []) )
+        assert all( k in self.cfg for k in ['a', 'b', 'seqs', 'count', 't'] )
 
-        self.counts_a = [ sum(s_a) for s_a, _ in cfg['seqs'] ]
-        self.counts_b = [ sum(s_b) for _, s_b in cfg['seqs'] ]
+        assert all( c in [2, 3, 4] for c in sum(map(list, sum(self.cfg['seqs'], [])), []) )
+
+        self.counts_a = [ sum(s_a) for s_a, _ in self.cfg['seqs'] ]
+        self.counts_b = [ sum(s_b) for _, s_b in self.cfg['seqs'] ]
 
         assert self.counts_a.count(self.counts_a[0]) == len(self.counts_a)
         assert self.counts_b.count(self.counts_b[0]) == len(self.counts_b)
 
-        assert cfg['s'] >= 0 and cfg['s'] <= cfg['a']
+        assert self.cfg['s'] >= 0 and self.cfg['s'] <= self.cfg['a']
 
     @staticmethod
     def transform(line, ang, dx, dy):
