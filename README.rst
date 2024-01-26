@@ -8,7 +8,7 @@ It is made with Python, VTK and `vtkbool <https://github.com/zippy84/vtkbool>`_,
 How can I use it?
 *****************
 
-Install Anaconda from https://anaconda.org/, create you own virtual environment and then run *generate.py*.
+Install Anaconda from https://anaconda.org/, create you own virtual environment with *environment.yml* and then run *generate.py*.
 
 It's a generator, so you can define you own configuration for every model. Just edit the *cfgs* list in *generate.py*.
 
