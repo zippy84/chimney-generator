@@ -15,17 +15,15 @@ from vtkmodules.vtkIOGeometry import vtkSTLWriter
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkCleanPolyData, vtkTriangleFilter
 from vtkmodules.vtkFiltersModeling import vtkLinearExtrusionFilter
 
-# only works with vtkbool#3d0d954
-
 from vtkbool.vtkBool import vtkPolyDataBooleanFilter
 
 class Chimney:
     def __init__(self, cfg):
-        self.cfg = { 'e': .15, 'f': .625, 'h': .75, 'l': 1, 'div_a': 1, 'div_b': 1, 'phi': 0, 's': 0 }
+        self.cfg = { 'e': .15, 'f': .625, 'g': 1, 'h': .75, 'div_a': 1, 'div_b': 1, 'phi': 0, 's': 0 }
 
         self.cfg.update(cfg)
 
-        assert all( k in self.cfg for k in ['a', 'b', 'seqs', 'count', 't'] )
+        assert all( k in self.cfg for k in ['a', 'b', 'seqs', 't'] )
 
         assert all( c in [2, 3, 4] for c in sum(map(list, sum(self.cfg['seqs'], [])), []) )
 
@@ -122,12 +120,15 @@ class Chimney:
         return bf
 
     def export(self, name):
+        count = math.ceil(max([self.cfg['t']+math.tan(self.cfg['phi'])*self.cfg['s'],
+            self.cfg['t']+math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s'])])/self.cfg['f'])
+
         all_seqs = []
 
-        while len(all_seqs) < self.cfg['count']:
+        while len(all_seqs) < count:
             all_seqs.extend(self.cfg['seqs'])
 
-            del all_seqs[self.cfg['count']:]
+        del all_seqs[count:]
 
         g = self.cfg['f']-self.cfg['e']
 
@@ -173,17 +174,17 @@ class Chimney:
 
         line = [(self.cfg['s'], -off, -self.cfg['t']),
             (-off, -off, -self.cfg['t']-math.tan(self.cfg['phi'])*(self.cfg['s']+off)),
-            (-off, -off, -self.cfg['count']*self.cfg['f']-self.cfg['h']-off),
-            (self.cfg['a']+off, -off, -self.cfg['count']*self.cfg['f']-self.cfg['h']-off),
+            (-off, -off, -count*self.cfg['f']-self.cfg['h']-off),
+            (self.cfg['a']+off, -off, -count*self.cfg['f']-self.cfg['h']-off),
             (self.cfg['a']+off, -off, -self.cfg['t']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s']+off))]
 
         result = Chimney.difference(chimney_, Chimney.extrude_from_line(line, y=self.cfg['b']+2*off))
 
         base_line = [(self.cfg['s'], 0, -self.cfg['t']),
             (0, 0, -self.cfg['t']-math.tan(self.cfg['phi'])*self.cfg['s']),
-            (0, 0, -self.cfg['t']-self.cfg['l']-math.tan(self.cfg['phi'])*self.cfg['s']),
-            (self.cfg['s'], 0, -self.cfg['t']-self.cfg['l']),
-            (self.cfg['a'], 0, -self.cfg['t']-self.cfg['l']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s'])),
+            (0, 0, -self.cfg['t']-self.cfg['g']-math.tan(self.cfg['phi'])*self.cfg['s']),
+            (self.cfg['s'], 0, -self.cfg['t']-self.cfg['g']),
+            (self.cfg['a'], 0, -self.cfg['t']-self.cfg['g']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s'])),
             (self.cfg['a'], 0, -self.cfg['t']-math.tan(self.cfg['phi'])*(self.cfg['a']-self.cfg['s']))]
 
         if self.cfg['s'] == 0 or self.cfg['s'] == self.cfg['a']:
@@ -211,19 +212,19 @@ if __name__ == '__main__':
             [(3, 2, 3), (2, 2, 2, 2, 2, 2)],
             [(2, 2, 2, 2), (3, 2, 4, 3)],
             [(3, 2, 3), (2, 2, 2, 2, 2, 2)]
-        ], 'div_a': 1, 'div_b': 2, 'count': 18, 's': 4.3333, 't': 6.916667, 'phi': math.pi/4 },
+        ], 'div_a': 1, 'div_b': 2, 's': 4.3333, 't': 6.916667, 'phi': math.pi/4 },
         { 'a': 3.25, 'b': 8.6666, 'seqs': [
             [(3, 3), (2, 2, 2, 2, 2, 2, 2, 2)],
             [(2, 2, 2), (3, 4, 4, 2, 3)],
             [(3, 3), (2, 2, 2, 2, 2, 2, 2, 2)],
             [(2, 2, 2), (3, 2, 4, 4, 3)],
-        ], 'div_a': 1, 'div_b': 3, 'count': 13, 's': 3.25, 't': 4.875, 'phi': math.pi/4 },
+        ], 'div_a': 1, 'div_b': 3, 's': 3.25, 't': 4.875, 'phi': math.pi/4 },
         { 'a': 10.8333, 'b': 4.3333, 'seqs': [
             [(3, 4, 4, 4, 2, 3), (2, 2, 2, 2)],
             [(2, 2, 2, 2, 2, 2, 2, 2, 2, 2), (3, 2, 3)],
             [(3, 2, 4, 4, 4, 3), (2, 2, 2, 2)],
             [(2, 2, 2, 2, 2, 2, 2, 2, 2, 2), (3, 2, 3)]
-        ], 'div_a': 3, 'div_b': 1, 'count': 15, 's': 7.583333, 't': 1.75, 'phi': math.pi/4 }
+        ], 'div_a': 3, 'div_b': 1, 's': 7.583333, 't': 1.75, 'phi': math.pi/4 }
     ]
 
     os.makedirs('out', exist_ok=True)
