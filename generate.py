@@ -19,7 +19,7 @@ from vtkbool.vtkBool import vtkPolyDataBooleanFilter
 
 class Chimney:
     def __init__(self, cfg):
-        self.cfg = { 'e': .15, 'f': .625, 'g': 1, 'h': .75, 'div_a': 1, 'div_b': 1, 'phi': 0, 's': 0 }
+        self.cfg = { 'e': .15, 'f': .625, 'g': 1, 'h': .75, 'div_a': 1, 'div_b': 1, 'phi': 0, 's': 0, 'pad_a': 2, 'pad_b': 2 }
 
         self.cfg.update(cfg)
 
@@ -157,8 +157,11 @@ class Chimney:
         st_a = (self.cfg['a']+self.cfg['e'])/self.counts_a[0]-self.cfg['e']/2
         st_b = (self.cfg['b']+self.cfg['e'])/self.counts_b[0]-self.cfg['e']/2
 
-        xs = [ st_a+i*(self.cfg['a']-2*st_a)/self.cfg['div_a'] for i in range(self.cfg['div_a']+1) ]
-        ys = [ st_b+i*(self.cfg['b']-2*st_b)/self.cfg['div_b'] for i in range(self.cfg['div_b']+1) ]
+        st_a_ = (self.cfg['pad_a']-1)*st_a
+        st_b_ = (self.cfg['pad_b']-1)*st_b
+
+        xs = [ st_a_+i*(self.cfg['a']-2*st_a_)/self.cfg['div_a'] for i in range(self.cfg['div_a']+1) ]
+        ys = [ st_b_+i*(self.cfg['b']-2*st_b_)/self.cfg['div_b'] for i in range(self.cfg['div_b']+1) ]
 
         bfs_ = [chimney]
 
