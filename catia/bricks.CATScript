@@ -1,0 +1,210 @@
+' man muss auf einer fläche eine skizze mit genau zwei punkten erstellen, die ein rechteck aufspannen
+' die skizze auswählen und unter Tools -> Makros... das script hier ausführen
+
+Sub CATMain()
+    Dim doc As Document
+    Set doc = CATIA.ActiveDocument
+
+    Dim part As Part
+    Set part = doc.Part
+
+    If doc.Selection.Count = 1 And doc.Selection.Item(1).Type = "Sketch" Then
+        Dim sketch As Sketch
+        Set sketch = doc.Selection.Item(1).Value
+
+        part.InWorkObject = sketch
+
+        sketch.OpenEdition()
+
+        Dim geometries As GeometricElements
+        Set geometries = sketch.GeometricElements
+
+        Dim coords(1) As Double
+        Dim points(1, 1) As Double
+
+        Dim j As Integer
+        j = 0 ' Set nur bei objekt-referenzen, nicht bei primitiven
+
+        For i As Integer = 1 To geometries.Count
+            Dim element As GeometricElement
+            Set element = geometries.Item(i)
+
+            If element.GeometricType = catGeoTypePoint2D Then
+                element.GetCoordinates coords
+
+                ' MsgBox Join(coords, ",")
+
+                points(j, 0) = coords(0)
+                points(j, 1) = coords(1)
+
+                element.Construction = True
+
+                j = j+1
+
+                If j = 2 Then
+                    Exit For
+                End If
+            End If
+        Next
+
+        Dim width As Double
+        Dim height As Double
+
+        width = Abs(points(0, 0)-points(1, 0))
+        height = Abs(points(0, 1)-points(1, 1))
+
+        ' MsgBox "height " & height & " width " & width
+
+        Dim originX As Double
+        Dim originY As Double
+
+        If points(0, 0) < points(1, 0) Then
+            originX = points(0, 0)
+        Else
+            originX = points(1, 0)
+        End If
+
+        If points(0, 1) < points(1, 1) Then
+            originY = points(0, 1)
+        Else
+            originY = points(1, 1)
+        End If
+
+        ' MsgBox "originX " & originX & " originY " & originY
+
+        ' das muster der ziegelung wird hier manuell definiert
+
+        ' man muss countRows definieren
+        ' und dann die pattern (also die counts der viertel steine)
+
+        ' 2 steht für einen halben stein
+        ' 4 für einen ganzen stein
+
+        Dim countRows AS Integer
+
+        countRows = 11
+
+        ' Dim pattern(1) As Double
+        ' pattern(0) = Array(2, 4, 4, 4, 3)
+        ' pattern(1) = Array(4, 4, 4, 4, 1)
+
+        ' Dim pattern(1) As Double
+        ' pattern(0) = Array(4, 2)
+        ' pattern(1) = Array(2, 4)
+
+        countRows = 4
+
+        Dim pattern(1) As Double
+        pattern(0) = Array(4, 4, 4, 4, 4, 4, 4)
+        pattern(1) = Array(2, 4, 4, 4, 4, 4, 4, 2)
+
+        ' das nachfolgende nicht ändern
+
+        Dim gap As Double
+        gap = 0.15
+
+        Dim halfGap As Double
+        halfGap = gap/2
+
+        Dim rowHeight AS Double
+        rowHeight = (height-gap)/countRows
+
+        ' MsgBox "rowHeight " & rowHeight
+
+        Dim realPattern() As Double
+        ReDim realPattern(countRows-1)
+
+        For i As Integer = 0 To countRows-1
+            For j As Integer = 0 To UBound(pattern)
+                If i+j < countRows Then
+                    realPattern(i+j) = pattern(j) ' Shallow Copy
+                End If
+            Next
+            i = i+UBound(pattern)
+        Next
+
+        Dim sumCounts As Integer
+        sumCounts = 0
+
+        For i As Integer = 0 To UBound(pattern(0))
+            sumCounts = sumCounts+pattern(0)(i)
+        Next
+
+        Dim quarterWidth As Integer
+        quarterWidth = (width+gap)/sumCounts
+
+        ' MsgBox "sumCounts " & sumCounts & " quarterWidth " & quarterWidth
+
+        Dim x As Double
+        Dim y AS Double
+
+        Dim xA As Double
+        Dim xB As Double
+
+        Dim yA As Double
+        Dim yB As Double
+
+        Dim brickWidth As Double
+
+        Dim factory As Factory2D
+        Set factory = sketch.Factory2D
+
+        Dim realPoints(3) As Double
+
+        For i As Integer = 0 To UBound(realPattern)
+            y = originY+halfGap+i*rowHeight
+
+            yA = y+halfGap
+            yB = y+rowHeight-halfGap
+
+            ' MsgBox "i " & i & " y " & y & " yA " & yA & " yB " & yB
+
+            x = originX-halfGap
+
+            For j As Integer = 0 To UBound(realPattern(i))
+                brickWidth = realPattern(i)(j)*quarterWidth
+
+                xA = x+halfGap
+                xB = x+brickWidth-halfGap
+
+                ' CCW
+
+                Set realPoints(0) = factory.CreatePoint(xA, yA)
+                Set realPoints(1) = factory.CreatePoint(xB, yA)
+                Set realPoints(2) = factory.CreatePoint(xB, yB)
+                Set realPoints(3) = factory.CreatePoint(xA, yB)
+
+                Dim lineA As Line2D
+                Dim lineB As Line2D
+                Dim lineC As Line2D
+                Dim lineD As Line2D
+
+                Set lineA = factory.CreateLine(xA, yA, xB, yA)
+                Set lineB = factory.CreateLine(xB, yA, xB, yB)
+                Set lineC = factory.CreateLine(xB, yB, xA, yB)
+                Set lineD = factory.CreateLine(xA, yB, xA, yA)
+
+                lineA.StartPoint = realPoints(0)
+                lineA.EndPoint = realPoints(1)
+
+                lineB.StartPoint = realPoints(1)
+                lineB.EndPoint = realPoints(2)
+
+                lineC.StartPoint = realPoints(2)
+                lineC.EndPoint = realPoints(3)
+
+                lineD.StartPoint = realPoints(3)
+                lineD.EndPoint = realPoints(0)
+
+                x = x+brickWidth
+            Next
+        Next
+
+        sketch.CloseEdition()
+        part.Update()
+
+    Else
+        MsgBox "A single sketch must be selected"
+    End If
+
+End Sub
