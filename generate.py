@@ -15,7 +15,7 @@ from vtkmodules.vtkIOGeometry import vtkSTLWriter
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkCleanPolyData, vtkTriangleFilter
 from vtkmodules.vtkFiltersModeling import vtkLinearExtrusionFilter
 
-from vtkbool.vtkBool import vtkPolyDataBooleanFilter
+from vtkbool.vtkbool import vtkPolyDataBooleanFilter
 
 class Chimney:
     def __init__(self, cfg):

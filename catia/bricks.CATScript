@@ -1,7 +1,86 @@
 ' man muss auf einer fläche eine skizze mit genau zwei punkten erstellen, die ein rechteck aufspannen
 ' die skizze auswählen und unter Tools -> Makros... das script hier ausführen
 
+' konfiguration der ziegelmusterung siehe #44
+
+Function BuildPattern(startArr, repeatValue, repeatCount, endArr)
+    Dim newArray()
+    Dim totalSize, i, j
+
+    Dim startSize
+    Dim endSize
+
+    startSize = UBound(startArr)+1
+    endSize = UBound(endArr)+1
+
+    totalSize = startSize+repeatCount+endSize
+
+    ReDim newArray(totalSize-1)
+
+    j = 0
+
+    For i = 0 To UBound(startArr)
+        newArray(j) = startArr(i)
+        j = j+1
+    Next
+
+    For i = 1 To repeatCount
+        newArray(j) = repeatValue
+        j = j + 1
+    Next
+
+    For i = 0 To UBound(endArr)
+        newArray(j) = endArr(i)
+        j = j+1
+    Next
+
+    BuildPattern = newArray ' komischer syntax
+End Function
+
 Sub CATMain()
+    Dim countRows AS Integer
+    Dim gap As Double
+
+    ' das muster der ziegelung wird hier manuell definiert
+
+    ' man muss countRows definieren
+    ' und dann die pattern (also die counts der viertel steine)
+    ' die pattern werden solange wiederholt, bis countRows erreicht ist
+    ' pattern von unten nach oben
+
+    ' 2 steht für einen halben stein
+    ' 4 für einen ganzen stein
+
+    gap = 0.15 ' die fugenbreite
+
+    ' countRows = 11
+
+    ' Dim pattern(1) As Double
+    ' pattern(0) = Array(4, 4, 4, 4, 1)
+    ' pattern(1) = Array(2, 4, 4, 4, 3)
+
+    ' Dim pattern(1) As Double
+    ' pattern(0) = Array(4, 2)
+    ' pattern(1) = Array(2, 4)
+
+    ' countRows = 4
+
+    ' Dim pattern(1) As Double
+    ' pattern(0) = Array(4, 4, 4, 4, 4, 4, 4)
+    ' pattern(1) = Array(2, 4, 4, 4, 4, 4, 4, 2)
+
+    ' das ist das beispiel in den screenshots
+
+    countRows = 10
+
+    Dim pattern(3) As Double
+    pattern(0) = BuildPattern(Array(3), 4, 44, Array(3))
+    pattern(1) = BuildPattern(Array(), 2, 91, Array())
+    pattern(2) = BuildPattern(Array(3, 2), 4, 43, Array(2, 3))
+    pattern(3) = BuildPattern(Array(), 2, 91, Array())
+
+    ' das nachfolgende nicht ändern
+
     Dim doc As Document
     Set doc = CATIA.ActiveDocument
 
@@ -15,6 +94,9 @@ Sub CATMain()
         part.InWorkObject = sketch
 
         sketch.OpenEdition()
+
+        Dim constraints As Constraints
+        Set constraints = sketch.Constraints
 
         Dim geometries As GeometricElements
         Set geometries = sketch.GeometricElements
@@ -71,37 +153,6 @@ Sub CATMain()
         End If
 
         ' MsgBox "originX " & originX & " originY " & originY
-
-        ' das muster der ziegelung wird hier manuell definiert
-
-        ' man muss countRows definieren
-        ' und dann die pattern (also die counts der viertel steine)
-
-        ' 2 steht für einen halben stein
-        ' 4 für einen ganzen stein
-
-        Dim countRows AS Integer
-
-        countRows = 11
-
-        ' Dim pattern(1) As Double
-        ' pattern(0) = Array(2, 4, 4, 4, 3)
-        ' pattern(1) = Array(4, 4, 4, 4, 1)
-
-        ' Dim pattern(1) As Double
-        ' pattern(0) = Array(4, 2)
-        ' pattern(1) = Array(2, 4)
-
-        countRows = 4
-
-        Dim pattern(1) As Double
-        pattern(0) = Array(4, 4, 4, 4, 4, 4, 4)
-        pattern(1) = Array(2, 4, 4, 4, 4, 4, 4, 2)
-
-        ' das nachfolgende nicht ändern
-
-        Dim gap As Double
-        gap = 0.15
 
         Dim halfGap As Double
         halfGap = gap/2
@@ -195,6 +246,24 @@ Sub CATMain()
 
                 lineD.StartPoint = realPoints(3)
                 lineD.EndPoint = realPoints(0)
+
+                ' wenn die linien fixiert werden sollen...
+
+                ' Dim constraintA As Constraint
+                ' Set constraintA = constraints.AddMonoEltCst(catCstTypeReference, lineA)
+                ' constraintA.Mode = catCstModeDrivingDimension
+
+                ' Dim constraintB As Constraint
+                ' Set constraintB = constraints.AddMonoEltCst(catCstTypeReference, lineB)
+                ' constraintB.Mode = catCstModeDrivingDimension
+
+                ' Dim constraintC As Constraint
+                ' Set constraintC = constraints.AddMonoEltCst(catCstTypeReference, lineC)
+                ' constraintC.Mode = catCstModeDrivingDimension
+
+                ' Dim constraintD As Constraint
+                ' Set constraintD = constraints.AddMonoEltCst(catCstTypeReference, lineD)
+                ' constraintD.Mode = catCstModeDrivingDimension
 
                 x = x+brickWidth
             Next

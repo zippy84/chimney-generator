@@ -2,5 +2,5 @@ name: env
 channels:
   - defaults
 dependencies:
-  - conda-forge::vtkbool>=3.0.1
+  - conda-forge::vtkbool>=3.2
 prefix: /home/zippy/miniconda3/envs/env
