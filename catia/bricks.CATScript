@@ -7,8 +7,7 @@ Function BuildPattern(startArr, repeatValue, repeatCount, endArr)
     Dim newArray()
     Dim totalSize, i, j
 
-    Dim startSize
-    Dim endSize
+    Dim startSize, endSize
 
     startSize = UBound(startArr)+1
     endSize = UBound(endArr)+1
@@ -26,7 +25,7 @@ Function BuildPattern(startArr, repeatValue, repeatCount, endArr)
 
     For i = 1 To repeatCount
         newArray(j) = repeatValue
-        j = j + 1
+        j = j+1
     Next
 
     For i = 0 To UBound(endArr)
@@ -38,14 +37,14 @@ Function BuildPattern(startArr, repeatValue, repeatCount, endArr)
 End Function
 
 Sub CATMain()
-    Dim countRows AS Integer
-    Dim gap As Double
+    Dim countRows, gap
 
     ' das muster der ziegelung wird hier manuell definiert
 
     ' man muss countRows definieren
     ' und dann die pattern (also die counts der viertel steine)
     ' die pattern werden solange wiederholt, bis countRows erreicht ist
+    ' die summe der counts sollten in jeder zeile gleich sein (in #203 kann man sich das ausgeben lassen)
     ' pattern von unten nach oben
 
     ' 2 steht für einen halben stein
@@ -55,17 +54,17 @@ Sub CATMain()
 
     ' countRows = 11
 
-    ' Dim pattern(1) As Double
+    ' Dim pattern(1)
     ' pattern(0) = Array(4, 4, 4, 4, 1)
     ' pattern(1) = Array(2, 4, 4, 4, 3)
 
-    ' Dim pattern(1) As Double
+    ' Dim pattern(1)
     ' pattern(0) = Array(4, 2)
     ' pattern(1) = Array(2, 4)
 
     ' countRows = 4
 
-    ' Dim pattern(1) As Double
+    ' Dim pattern(1)
     ' pattern(0) = Array(4, 4, 4, 4, 4, 4, 4)
     ' pattern(1) = Array(2, 4, 4, 4, 4, 4, 4, 2)
 
@@ -73,7 +72,7 @@ Sub CATMain()
 
     countRows = 10
 
-    Dim pattern(3) As Double
+    Dim pattern(3)
     pattern(0) = BuildPattern(Array(3), 4, 44, Array(3))
     pattern(1) = BuildPattern(Array(), 2, 91, Array())
     pattern(2) = BuildPattern(Array(3, 2), 4, 43, Array(2, 3))
@@ -87,191 +86,188 @@ Sub CATMain()
     Dim part As Part
     Set part = doc.Part
 
-    If doc.Selection.Count = 1 And doc.Selection.Item(1).Type = "Sketch" Then
-        Dim sketch As Sketch
-        Set sketch = doc.Selection.Item(1).Value
+    If doc.Selection.Count = 1 Then
+        If doc.Selection.Item(1).Type = "Sketch" Then
+            Dim sketch As Sketch
+            Set sketch = doc.Selection.Item(1).Value
 
-        part.InWorkObject = sketch
+            part.InWorkObject = sketch
 
-        sketch.OpenEdition()
+            sketch.OpenEdition()
 
-        Dim constraints As Constraints
-        Set constraints = sketch.Constraints
+            Dim constraints As Constraints
+            Set constraints = sketch.Constraints
 
-        Dim geometries As GeometricElements
-        Set geometries = sketch.GeometricElements
+            Dim geometries As GeometricElements
+            Set geometries = sketch.GeometricElements
 
-        Dim coords(1) As Double
-        Dim points(1, 1) As Double
+            Dim coords(1)
+            Dim points(1, 1)
 
-        Dim j As Integer
-        j = 0 ' Set nur bei objekt-referenzen, nicht bei primitiven
+            Dim i, j
 
-        For i As Integer = 1 To geometries.Count
-            Dim element As GeometricElement
-            Set element = geometries.Item(i)
+            i = 0 ' Set nur bei objekt-referenzen, nicht bei primitiven
 
-            If element.GeometricType = catGeoTypePoint2D Then
-                element.GetCoordinates coords
+            For Each element In sketch.GeometricElements
+                If element.GeometricType = catGeoTypePoint2D Then
+                    element.GetCoordinates coords
 
-                ' MsgBox Join(coords, ",")
+                    ' MsgBox Join(coords, ",")
 
-                points(j, 0) = coords(0)
-                points(j, 1) = coords(1)
+                    points(i, 0) = coords(0)
+                    points(i, 1) = coords(1)
 
-                element.Construction = True
+                    element.Construction = True
 
-                j = j+1
+                    i = i+1
 
-                If j = 2 Then
-                    Exit For
+                    If i = 2 Then
+                        Exit For
+                    End If
                 End If
+            Next
+
+            If i <> 2 Then
+                MsgBox "Exactly 2 points must be defined"
+                Exit Sub
             End If
-        Next
 
-        Dim width As Double
-        Dim height As Double
+            Dim width, height
 
-        width = Abs(points(0, 0)-points(1, 0))
-        height = Abs(points(0, 1)-points(1, 1))
+            width = Abs(points(0, 0)-points(1, 0))
+            height = Abs(points(0, 1)-points(1, 1))
 
-        ' MsgBox "height " & height & " width " & width
+            ' MsgBox "height " & height & ", width " & width
 
-        Dim originX As Double
-        Dim originY As Double
+            Dim originX, originY
 
-        If points(0, 0) < points(1, 0) Then
-            originX = points(0, 0)
-        Else
-            originX = points(1, 0)
-        End If
+            If points(0, 0) < points(1, 0) Then
+                originX = points(0, 0)
+            Else
+                originX = points(1, 0)
+            End If
 
-        If points(0, 1) < points(1, 1) Then
-            originY = points(0, 1)
-        Else
-            originY = points(1, 1)
-        End If
+            If points(0, 1) < points(1, 1) Then
+                originY = points(0, 1)
+            Else
+                originY = points(1, 1)
+            End If
 
-        ' MsgBox "originX " & originX & " originY " & originY
+            ' MsgBox "originX " & originX & ", originY " & originY
 
-        Dim halfGap As Double
-        halfGap = gap/2
+            Dim halfGap
+            halfGap = gap/2
 
-        Dim rowHeight AS Double
-        rowHeight = (height-gap)/countRows
+            Dim rowHeight
+            rowHeight = (height-gap)/countRows
 
-        ' MsgBox "rowHeight " & rowHeight
+            ' MsgBox "rowHeight " & rowHeight
 
-        Dim realPattern() As Double
-        ReDim realPattern(countRows-1)
+            Dim realPattern()
+            ReDim realPattern(countRows-1)
 
-        For i As Integer = 0 To countRows-1
-            For j As Integer = 0 To UBound(pattern)
-                If i+j < countRows Then
-                    realPattern(i+j) = pattern(j) ' Shallow Copy
+            For i = 0 To countRows-1
+                For j = 0 To UBound(pattern)
+                    If i+j < countRows Then
+                        realPattern(i+j) = pattern(j) ' Shallow Copy
+                    End If
+                Next
+                i = i+UBound(pattern)
+            Next
+
+            Dim x, y, xA, xB, yA, yB
+
+            Dim sumCounts, quarterWidth, brickWidth
+
+            Dim factory As Factory2D
+            Set factory = sketch.Factory2D
+
+            Dim realPoints(3)
+
+            For i = 0 To UBound(realPattern)
+                sumCounts = 0
+
+                For j = 0 To UBound(realPattern(i))
+                    sumCounts = sumCounts+realPattern(i)(j)
+                Next
+
+                quarterWidth = (width+gap)/sumCounts
+
+                If i <= UBound(pattern) Then
+                    ' MsgBox "i " & i & ", sumCounts " & sumCounts
                 End If
+
+                y = originY+halfGap+i*rowHeight
+
+                yA = y+halfGap
+                yB = y+rowHeight-halfGap
+
+                ' MsgBox "i " & i & ", y " & y & ", yA " & yA & ", yB " & yB
+
+                x = originX-halfGap
+
+                For j = 0 To UBound(realPattern(i))
+                    brickWidth = realPattern(i)(j)*quarterWidth
+
+                    xA = x+halfGap
+                    xB = x+brickWidth-halfGap
+
+                    ' CCW
+
+                    Set realPoints(0) = factory.CreatePoint(xA, yA)
+                    Set realPoints(1) = factory.CreatePoint(xB, yA)
+                    Set realPoints(2) = factory.CreatePoint(xB, yB)
+                    Set realPoints(3) = factory.CreatePoint(xA, yB)
+
+                    Dim lineA As Line2D
+                    Dim lineB As Line2D
+                    Dim lineC As Line2D
+                    Dim lineD As Line2D
+
+                    Set lineA = factory.CreateLine(xA, yA, xB, yA)
+                    Set lineB = factory.CreateLine(xB, yA, xB, yB)
+                    Set lineC = factory.CreateLine(xB, yB, xA, yB)
+                    Set lineD = factory.CreateLine(xA, yB, xA, yA)
+
+                    lineA.StartPoint = realPoints(0)
+                    lineA.EndPoint = realPoints(1)
+
+                    lineB.StartPoint = realPoints(1)
+                    lineB.EndPoint = realPoints(2)
+
+                    lineC.StartPoint = realPoints(2)
+                    lineC.EndPoint = realPoints(3)
+
+                    lineD.StartPoint = realPoints(3)
+                    lineD.EndPoint = realPoints(0)
+
+                    ' wenn die linien fixiert werden sollen...
+
+                    ' Dim constraintA As Constraint
+                    ' Set constraintA = constraints.AddMonoEltCst(catCstTypeReference, lineA)
+                    ' constraintA.Mode = catCstModeDrivingDimension
+
+                    ' Dim constraintB As Constraint
+                    ' Set constraintB = constraints.AddMonoEltCst(catCstTypeReference, lineB)
+                    ' constraintB.Mode = catCstModeDrivingDimension
+
+                    ' Dim constraintC As Constraint
+                    ' Set constraintC = constraints.AddMonoEltCst(catCstTypeReference, lineC)
+                    ' constraintC.Mode = catCstModeDrivingDimension
+
+                    ' Dim constraintD As Constraint
+                    ' Set constraintD = constraints.AddMonoEltCst(catCstTypeReference, lineD)
+                    ' constraintD.Mode = catCstModeDrivingDimension
+
+                    x = x+brickWidth
+                Next
             Next
-            i = i+UBound(pattern)
-        Next
 
-        Dim sumCounts As Integer
-        sumCounts = 0
-
-        For i As Integer = 0 To UBound(pattern(0))
-            sumCounts = sumCounts+pattern(0)(i)
-        Next
-
-        Dim quarterWidth As Integer
-        quarterWidth = (width+gap)/sumCounts
-
-        ' MsgBox "sumCounts " & sumCounts & " quarterWidth " & quarterWidth
-
-        Dim x As Double
-        Dim y AS Double
-
-        Dim xA As Double
-        Dim xB As Double
-
-        Dim yA As Double
-        Dim yB As Double
-
-        Dim brickWidth As Double
-
-        Dim factory As Factory2D
-        Set factory = sketch.Factory2D
-
-        Dim realPoints(3) As Double
-
-        For i As Integer = 0 To UBound(realPattern)
-            y = originY+halfGap+i*rowHeight
-
-            yA = y+halfGap
-            yB = y+rowHeight-halfGap
-
-            ' MsgBox "i " & i & " y " & y & " yA " & yA & " yB " & yB
-
-            x = originX-halfGap
-
-            For j As Integer = 0 To UBound(realPattern(i))
-                brickWidth = realPattern(i)(j)*quarterWidth
-
-                xA = x+halfGap
-                xB = x+brickWidth-halfGap
-
-                ' CCW
-
-                Set realPoints(0) = factory.CreatePoint(xA, yA)
-                Set realPoints(1) = factory.CreatePoint(xB, yA)
-                Set realPoints(2) = factory.CreatePoint(xB, yB)
-                Set realPoints(3) = factory.CreatePoint(xA, yB)
-
-                Dim lineA As Line2D
-                Dim lineB As Line2D
-                Dim lineC As Line2D
-                Dim lineD As Line2D
-
-                Set lineA = factory.CreateLine(xA, yA, xB, yA)
-                Set lineB = factory.CreateLine(xB, yA, xB, yB)
-                Set lineC = factory.CreateLine(xB, yB, xA, yB)
-                Set lineD = factory.CreateLine(xA, yB, xA, yA)
-
-                lineA.StartPoint = realPoints(0)
-                lineA.EndPoint = realPoints(1)
-
-                lineB.StartPoint = realPoints(1)
-                lineB.EndPoint = realPoints(2)
-
-                lineC.StartPoint = realPoints(2)
-                lineC.EndPoint = realPoints(3)
-
-                lineD.StartPoint = realPoints(3)
-                lineD.EndPoint = realPoints(0)
-
-                ' wenn die linien fixiert werden sollen...
-
-                ' Dim constraintA As Constraint
-                ' Set constraintA = constraints.AddMonoEltCst(catCstTypeReference, lineA)
-                ' constraintA.Mode = catCstModeDrivingDimension
-
-                ' Dim constraintB As Constraint
-                ' Set constraintB = constraints.AddMonoEltCst(catCstTypeReference, lineB)
-                ' constraintB.Mode = catCstModeDrivingDimension
-
-                ' Dim constraintC As Constraint
-                ' Set constraintC = constraints.AddMonoEltCst(catCstTypeReference, lineC)
-                ' constraintC.Mode = catCstModeDrivingDimension
-
-                ' Dim constraintD As Constraint
-                ' Set constraintD = constraints.AddMonoEltCst(catCstTypeReference, lineD)
-                ' constraintD.Mode = catCstModeDrivingDimension
-
-                x = x+brickWidth
-            Next
-        Next
-
-        sketch.CloseEdition()
-        part.Update()
-
+            sketch.CloseEdition()
+            part.Update()
+        Else
+            MsgBox "A single sketch must be selected"
+        End If
     Else
         MsgBox "A single sketch must be selected"
     End If
