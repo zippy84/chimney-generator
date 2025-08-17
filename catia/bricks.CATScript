@@ -1,8 +1,6 @@
 ' man muss auf einer fläche eine skizze mit genau zwei punkten erstellen, die ein rechteck aufspannen
 ' die skizze auswählen und unter Tools -> Makros... das script hier ausführen
 
-' konfiguration der ziegelmusterung siehe #44
-
 Function BuildPattern(startArr, repeatValue, repeatCount, endArr)
     Dim newArray()
     Dim totalSize, i, j
@@ -44,7 +42,7 @@ Sub CATMain()
     ' man muss countRows definieren
     ' und dann die pattern (also die counts der viertel steine)
     ' die pattern werden solange wiederholt, bis countRows erreicht ist
-    ' die summe der counts sollten in jeder zeile gleich sein (in #203 kann man sich das ausgeben lassen)
+    ' die summe der counts sollten in jeder zeile gleich sein
     ' pattern von unten nach oben
 
     ' 2 steht für einen halben stein
@@ -95,8 +93,8 @@ Sub CATMain()
 
             sketch.OpenEdition()
 
-            Dim constraints As Constraints
-            Set constraints = sketch.Constraints
+            ' Dim constraints As Constraints
+            ' Set constraints = sketch.Constraints
 
             Dim geometries As GeometricElements
             Set geometries = sketch.GeometricElements
@@ -264,6 +262,13 @@ Sub CATMain()
             Next
 
             sketch.CloseEdition()
+
+            Dim shapeFactory As Factory
+            Set shapeFactory = part.ShapeFactory
+
+            Dim pad As Pad
+            Set pad = shapeFactory.AddNewPad(sketch, gap)
+
             part.Update()
         Else
             MsgBox "A single sketch must be selected"
